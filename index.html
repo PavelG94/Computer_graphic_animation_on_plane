@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Computer graphic</title>
+        <meta charset='utf-8'/>
+        <script src="definitions.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas" width="600px" height="400px" style="border: 1px solid black;">Обновите браузер</canvas>
+        <button id='drawButton'>Соединить точки</button>
+        <script>
+            /*
+                Мышь:
+                    * clientX/Y, pageX/Y;
+                Элементы DOM:
+                    * HTMLElement.offsetTop/offsetLeft;
+                    * elem.getBoundingClientRect();
+                    * window.pageXOffset/pageYOffset;
+                !: 
+                    * canvas не дружит с css
+                    * запуск в окне firefox приводит 
+                    к выполнению старой версии кода;
+            */
+            var  ctx = canvas.getContext("2d");
+            var polygon = [];
+            var pointColor = new Rgba(76, 25, 25, 255),
+                lineColor = new Rgba(0, 0, 0, 255);
+            canvas.addEventListener("click", function(event){
+                var coords = getCoords(this); //relative to the document
+                var xVal = event.pageX - coords.left,
+                    yVal = event.pageY - coords.top;
+                var point = {x: xVal, y: yVal};
+                polygon.push(point);
+                DrawPoint(ctx, point, pointColor);
+            });
+            drawButton.addEventListener("click", function(event) {
+                if (polygon.length < 2) return;
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                var pointToId = 1;
+                while (pointToId < polygon.length) {
+                    DrawLine(ctx, polygon[pointToId-1], polygon[pointToId], lineColor);
+                    pointToId++;
+                }
+                DrawLine(ctx, polygon[0], polygon[polygon.length-1], lineColor);
+            });
+        </script>
+    </body>
+</html>
