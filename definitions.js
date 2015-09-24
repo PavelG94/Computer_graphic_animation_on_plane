@@ -50,13 +50,13 @@ function FillPolygon(ctx, points, color)
 {
     if (points.length < 3) return;
     ctx.save();
-    
+    //ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     var currPointId = 1;
     while (currPointId < points.length) {
         var p = points[currPointId];
         ctx.lineTo(p.x, p.y);
-        ctx.moveTo(p.x, p.y);
+        currPointId++;
     }
     ctx.lineTo(points[0].x, points[0].y);
     ctx.fillStyle = color.toString();
