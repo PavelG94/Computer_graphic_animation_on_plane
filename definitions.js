@@ -19,10 +19,6 @@ function getCoords(elem) {
   };
 }
 function DrawPoint(ctx, point, color) {
-    // var colorStr = 'rgba(' + (color.red || 0) + "," 
-    //                       + (color.green || 0) + ","
-    //                       + (color.blue || 0) + ","
-    //                       + (color.alpha || 0) + ")";
     ctx.save();
     
     ctx.beginPath();
@@ -49,4 +45,22 @@ function DrawLine(ctx, p1, p2, color) {
         imgData.data[pixelIndex + 3] = color.alpha; //a
     }
     ctx.putImageData(imgData,0,0);
+}
+function FillPolygon(ctx, points, color)
+{
+    if (points.length < 3) return;
+    ctx.save();
+    
+    ctx.moveTo(points[0].x, points[0].y);
+    var currPointId = 1;
+    while (currPointId < points.length) {
+        var p = points[currPointId];
+        ctx.lineTo(p.x, p.y);
+        ctx.moveTo(p.x, p.y);
+    }
+    ctx.lineTo(points[0].x, points[0].y);
+    ctx.fillStyle = color.toString();
+    ctx.fill();
+    
+    ctx.restore();
 }
