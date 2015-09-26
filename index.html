@@ -31,6 +31,7 @@
             <li><div class="color_sample"></div></li>
         </ul>
         <button id='draw_polygon'>Нарисовать полигон</button>
+        <button id="draw_route">Нарисовать маршрут</button>
         <canvas id="canvas" width="600px" height="400px" style="border: 1px solid black;">Обновите браузер</canvas>
         <script>
             var sample = color.getElementsByClassName("color_sample")[0];
@@ -46,25 +47,30 @@
             }
             redElem.onchange = greenElem.onchange = blueElem.onchange = ChangeColorSample;
             
-            
-            var ctx = canvas.getContext("2d");
-            var polygon = [];
-            var isPolygonDrawn = false;
-            canvas.addEventListener("click", function(event){
-                if(isPolygonDrawn) return;
+            function HandleClick(event) {
                 var coords = getCoords(this); //relative to the document
                 var xVal = event.pageX - coords.left,
                     yVal = event.pageY - coords.top;
                 var point = {x: xVal, y: yVal};
-                polygon.push(point);
+                arrayRef.push(point);
                 var rgba = GetChosenRgba();
-                DrawPoint(ctx, point, rgba);
-            });
+                DrawPoint(ctx, point, rgba);  
+            }
+            var ctx = canvas.getContext("2d");
+            var polygon = [], route = [];
+            var arrayRef = polygon;
+            canvas.onclick = HandleClick;
             draw_polygon.addEventListener("click", function(event) {
-                if (polygon.length < 2) return;
+                if (arrayRef.length < 2) return;
                 var rgba = GetChosenRgba();
-                FillPolygon(ctx, polygon, rgba);
-                isPolygonDrawn = true;
+                DrawPolygon(ctx, arrayRef, rgba, null);
+                arrayRef = route;
+            });
+            draw_route.addEventListener("click", function(event) {
+                if (arrayRef.length < 2) return;
+                var rgba = GetChosenRgba();
+                DrawPolygon(ctx, arrayRef, null, rgba);
+                canvas.onclick = null;
             });
         </script>
     </body>

@@ -46,7 +46,7 @@ function DrawLine(ctx, p1, p2, color) {
     }
     ctx.putImageData(imgData,0,0);
 }
-function FillPolygon(ctx, points, color)
+function DrawPolygon(ctx, points, fillColor, strokeColor)
 {
     if (points.length < 3) return;
     ctx.save();
@@ -59,8 +59,32 @@ function FillPolygon(ctx, points, color)
         currPointId++;
     }
     ctx.lineTo(points[0].x, points[0].y);
-    ctx.fillStyle = color.toString();
-    ctx.fill();
+    if (fillColor) {
+        ctx.fillStyle = fillColor.toString();
+        ctx.fill();
+    }
+    if (strokeColor) {
+        ctx.strokeStyle = strokeColor.toString();
+        ctx.stroke();
+    }
     
     ctx.restore();
 }
+
+// function FillPolygon(ctx, points, fillColor)
+// {
+//     if (points.length < 3) return;
+//     ctx.save();
+//     //ctx.beginPath();
+//     ctx.moveTo(points[0].x, points[0].y);
+//     var currPointId = 1;
+//     while (currPointId < points.length) {
+//         var p = points[currPointId];
+//         ctx.lineTo(p.x, p.y);
+//         currPointId++;
+//     }
+//     ctx.lineTo(points[0].x, points[0].y);
+//     ctx.fillStyle = fillColor.toString();
+//     ctx.fill();
+//     ctx.restore();
+// }
