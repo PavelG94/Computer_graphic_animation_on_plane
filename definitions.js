@@ -94,6 +94,34 @@ function Translate(point, dx, dy)
 {
     return {x: point.x+dx, y: point.y+dy};
 }
+function TranslatePolygon(/**/)
+{
+
+}
+function Rotate(point, center, alphaInRad)
+{
+    //Два сдвига вып. для вращения относительно точки center;
+    var resPoint = {x: point.x, y: point.y};
+    resPoint.x -= center.x;    resPoint.y -= center.y;
+
+    var sinAlpha = Math.sin(alphaInRad), cosAlpha = Math.cos(alphaInRad);
+    resPoint.x = Math.round(resPoint.x*cosAlpha - resPoint.y*sinAlpha);
+    resPoint.y = Math.round(resPoint.x*sinAlpha + resPoint.y*cosAlpha);
+    // resPoint.x = resPoint.x*cosAlpha - resPoint.y*sinAlpha;
+    // resPoint.y = resPoint.x*sinAlpha + resPoint.y*cosAlpha;
+
+    resPoint.x += center.x;    resPoint.y += center.y;
+    return resPoint;
+}
+function RotatePolygon(/**/)
+{
+
+
+}
+function ToRadians(angleInDegrees)
+{
+    return 2*Math.PI/360 * angleInDegrees;
+}
 function StartAnimation(ctx, polygon, route) {
     /*
         * setTimeout, setInterval;
@@ -101,23 +129,49 @@ function StartAnimation(ctx, polygon, route) {
         * Рекурсия;
     */
     var canvasWidth = ctx.canvas.width, canvasHeight = ctx.canvas.height;
-    var c = polygon.barycenter(), polygonCopy = new Polygon();
-    polygonCopy.points = [].concat(polygon.points);
+    var polygonCopy = new Polygon();
     polygonCopy.borderColor = polygon.borderColor;
     polygonCopy.fillColor = polygon.fillColor
-    // for (var i = 0; i < polygon.length; ++i) {
-    //     polygon[i].x = polygon[i].x - c.x;
-    //     polygon[i].y = polygon[i].y - c.y;
-    // }
+
     var startPointId = 0, endPointId = 1;
-    var t = 0; deltaT = 1/100;
+    var t = 0; deltaT = 1/100, alpha = 0, deltaAlpha = 1;
     function AnimationStep() {
+        /* На каждом шаге: 
+            - вращение на 1 градус polygon;
+            - копирование его координат в polygonCopy;
+            - смещение polygonCopy;
+        */
+        polygonCopy.points = [].concat(polygon.points);
+        var c = polygonCopy.barycenter();
+
+        var alphaCopy = alpha, stageAngle = 15, stageAngleInRad = ToRadians(stageAngle);
+        while (true) {
+            if (alphaCopy >= stageAngle) {
+                for (var i = 0; i < polygonCopy.points.length; ++i) {
+                    var resPoint = Rotate(polygonCopy.points[i], c, stageAngleInRad);
+                    polygonCopy.points[i] = resPoint;
+                }
+                alphaCopy -= stageAngle;
+            } else {
+                var alphaCopyInRad = ToRadians(alphaCopy);
+                for (var i = 0; i < polygonCopy.points.length; ++i) {
+                    var resPoint = Rotate(polygonCopy.points[i], c, alphaCopyInRad);
+                    polygonCopy.points[i] = resPoint;
+                }
+                break;
+            }
+        }
+        alpha = (alpha + deltaAlpha) % 360;
+       
+        //Движение
         var nextPoint = Object.create(null);
         nextPoint.x = (1 - t)*route.points[startPointId].x + t*route.points[endPointId].x;
         nextPoint.y = (1 - t)*route.points[startPointId].y + t*route.points[endPointId].y;
+        
+        c = polygonCopy.barycenter(); //учет предыдущего поворота
         var xDist = nextPoint.x - c.x, yDist = nextPoint.y - c.y;
-        for (var i = 0; i < polygon.points.length; ++i) {
-            var resPoint = Translate(polygon.points[i], xDist, yDist);
+        for (var i = 0; i < polygonCopy.points.length; ++i) {
+            var resPoint = Translate(polygonCopy.points[i], xDist, yDist);
             polygonCopy.points[i] = resPoint;
         }
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -129,8 +183,7 @@ function StartAnimation(ctx, polygon, route) {
             startPointId = endPointId; 
             endPointId = (endPointId == route.points.length - 1)? 0: endPointId + 1;
         }
-        //setTimeout(requestAnimationFrame(AnimationStep), 500);
-        setTimeout(window.requestAnimationFrame(AnimationStep), 1000);
+        window.requestAnimationFrame(AnimationStep);
     }
     window.requestAnimationFrame(AnimationStep);
 }
