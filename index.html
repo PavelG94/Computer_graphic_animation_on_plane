@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Computer graphic</title>
+        <meta charset='utf-8'/>
+        <script src="definitions.js"></script>
+        <style>
+            #color {
+                margin-bottom: 5px;
+                background-color: grey;
+            }
+            #color > li {
+                display: inline;
+            }
+            .color_chanel, .color_sample {
+                width: 30px;
+                height: 20px;
+            }
+            .color_sample {
+                vertical-align: middle;
+                border: 1px solid black;
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="color">
+            <li><input class="color_chanel" type="text" name="red_chanel" placeholder="red"/></li>
+            <li><input class="color_chanel" type="text" name="green_chanel" placeholder="green"/></li>
+            <li><input class="color_chanel" type="text" name="blue_chanel" placeholder="blue"/></li>
+            <li><div class="color_sample"></div></li>
+        </ul>
+        <button id='draw_polygon'>Нарисовать полигон</button>
+        <button id="draw_route">Нарисовать маршрут</button>
+        <button id="movement">Анимация движения</button>
+        <canvas id="canvas" width="600px" height="400px" style="border: 1px solid black;">Обновите браузер</canvas>
+        <script>
+            var sample = color.getElementsByClassName("color_sample")[0];
+            var redElem = document.getElementsByName("red_chanel")[0],
+                greenElem = document.getElementsByName("green_chanel")[0]
+                blueElem = document.getElementsByName("blue_chanel")[0];
+            function GetChosenRgba() {
+                return new Rgba(redElem.value, greenElem.value, blueElem.value, 255);
+            }
+            function ChangeColorSample() {
+                var rgba = GetChosenRgba();
+                sample.style.backgroundColor = rgba.toString();
+            }
+            redElem.onchange = greenElem.onchange = blueElem.onchange = ChangeColorSample;
+            
+            function HandleClick(event) {
+                var coords = getCoords(this); //relative to the document
+                var xVal = event.pageX - coords.left,
+                    yVal = event.pageY - coords.top;
+                var point = {x: xVal, y: yVal};
+                points.push(point);
+                var rgba = GetChosenRgba();
+                DrawPoint(ctx, point, rgba);  
+            }
+            var ctx = canvas.getContext("2d");
+            var polygon = new Polygon(), route = new Polygon();
+            var points = [];
+            var isPolygonDrawn = false, isRouteDrawn = false;
+            canvas.onclick = HandleClick;
+            draw_polygon.addEventListener("click", function(event) {
+                if (isPolygonDrawn) return;
+                if (points.length < 2) return;
+                polygon.points = [].concat(points); points = [];
+                var colorStr = GetChosenRgba().toString();
+                polygon.borderColor = colorStr;
+                polygon.fillColor = colorStr;
+                DrawPolygon(ctx, polygon);
+                isPolygonDrawn = true;
+                if (isRouteDrawn) {
+                    canvas.onclick = false;
+                }
+            });
+            draw_route.addEventListener("click", function(event) {
+                if (isRouteDrawn) return;
+                if (points.length < 2) return;
+                route.points = [].concat(points); points = [];
+                var colorStr = GetChosenRgba().toString();
+                route.borderColor = colorStr;
+                DrawPolygon(ctx, route);
+                isRouteDrawn = true;
+                if (isPolygonDrawn) {
+                    canvas.onclick = false;
+                }
+            });
+            movement.addEventListener("click", function() {
+                if (isPolygonDrawn && isRouteDrawn) {
+                    MovePolygon(ctx, polygon, route);
+                }
+            });
+        </script>
+    </body>
+</html>
