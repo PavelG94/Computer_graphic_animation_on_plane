@@ -100,12 +100,6 @@ function StartAnimation(ctx, polygon, route) {
         * requestAnimationFrame;
         * Рекурсия;
     */
-    /*
-        Неполадки:
-        * Смещение больше требуемого;
-        * Отрисовка без анимации;
-        * Рисование всех элементов черным цветом;
-    */
     var canvasWidth = ctx.canvas.width, canvasHeight = ctx.canvas.height;
     var c = polygon.barycenter(), polygonCopy = new Polygon();
     polygonCopy.points = [].concat(polygon.points);
@@ -116,7 +110,7 @@ function StartAnimation(ctx, polygon, route) {
     //     polygon[i].y = polygon[i].y - c.y;
     // }
     var startPointId = 0, endPointId = 1;
-    var t = 0; deltaT = 1000;
+    var t = 0; deltaT = 1/100;
     function AnimationStep() {
         var nextPoint = Object.create(null);
         nextPoint.x = (1 - t)*route.points[startPointId].x + t*route.points[endPointId].x;
