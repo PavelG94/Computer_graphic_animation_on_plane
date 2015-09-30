@@ -18,15 +18,16 @@ function Polygon(points, borderRgbaColor, fillRgbaColor) {
     this.borderColor = (borderRgbaColor instanceof Rgba)? borderRgbaColor.toString(): transparent;
     this.fillColor = (fillRgbaColor instanceof Rgba)? fillRgbaColor.toString(): transparent;
     this.barycenter = function() {
-        if (this.points.length == 0) return 0;
+        var points = this.points;
+        if (points.length == 0) return 0;
         var xSum = 0, ySum = 0;
-        for (var i = 0; i < polygon.length; ++i) {
-            xSum += this.points[i].x;
-            ySum += this.points[i].y;
+        for (var i = 0; i < points.length; ++i) {
+            xSum += points[i].x;
+            ySum += points[i].y;
         }    
         var c = Object.create(null); 
-        c.x = Math.round(1/this.points.length * xSum);
-        c.y = Math.round(1/this.points.length * ySum);
+        c.x = Math.round(1/points.length * xSum);
+        c.y = Math.round(1/points.length * ySum);
         return c;
     };
 }
@@ -70,7 +71,10 @@ function DrawPolygon(ctx, polygon)
     var points = polygon.points;
     if (points.length < 3) return;
     ctx.save();
-    //ctx.beginPath();
+
+    //Необходим, когда на холсте рисуетя более одного объекта!
+    ctx.beginPath(); 
+
     ctx.moveTo(points[0].x, points[0].y);
     var currPointId = 1;
     while (currPointId < points.length) {
@@ -90,11 +94,17 @@ function Translate(point, dx, dy)
 {
     return {x: point.x+dx, y: point.y+dy};
 }
-function MovePolygon(ctx, polygon, route) {
+function StartAnimation(ctx, polygon, route) {
     /*
         * setTimeout, setInterval;
         * requestAnimationFrame;
         * Рекурсия;
+    */
+    /*
+        Неполадки:
+        * Смещение больше требуемого;
+        * Отрисовка без анимации;
+        * Рисование всех элементов черным цветом;
     */
     var canvasWidth = ctx.canvas.width, canvasHeight = ctx.canvas.height;
     var c = polygon.barycenter(), polygonCopy = new Polygon();
@@ -107,7 +117,7 @@ function MovePolygon(ctx, polygon, route) {
     // }
     var startPointId = 0, endPointId = 1;
     var t = 0; deltaT = 1000;
-    function MovePolygonStep() {
+    function AnimationStep() {
         var nextPoint = Object.create(null);
         nextPoint.x = (1 - t)*route.points[startPointId].x + t*route.points[endPointId].x;
         nextPoint.y = (1 - t)*route.points[startPointId].y + t*route.points[endPointId].y;
@@ -125,9 +135,8 @@ function MovePolygon(ctx, polygon, route) {
             startPointId = endPointId; 
             endPointId = (endPointId == route.points.length - 1)? 0: endPointId + 1;
         }
+        //setTimeout(requestAnimationFrame(AnimationStep), 500);
+        setTimeout(window.requestAnimationFrame(AnimationStep), 1000);
     }
-    var delay = 1000;
-    setInterval(function() {
-        requestAnimationFrame(MovePolygonStep);
-    }, delay);
+    window.requestAnimationFrame(AnimationStep);
 }
