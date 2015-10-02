@@ -105,13 +105,24 @@ function Rotate(point, center, alphaInRad)
     resPoint.x -= center.x;    resPoint.y -= center.y;
 
     var sinAlpha = Math.sin(alphaInRad), cosAlpha = Math.cos(alphaInRad);
-    resPoint.x = Math.round(resPoint.x*cosAlpha - resPoint.y*sinAlpha);
-    resPoint.y = Math.round(resPoint.x*sinAlpha + resPoint.y*cosAlpha);
-    // resPoint.x = resPoint.x*cosAlpha - resPoint.y*sinAlpha;
-    // resPoint.y = resPoint.x*sinAlpha + resPoint.y*cosAlpha;
+    
+    var p = {x: 0, y: 0};
+    p.x = resPoint.x; p.y = resPoint.y;
+    resPoint.x = p.x*cosAlpha - p.y*sinAlpha;
+    resPoint.y = p.x*sinAlpha + p.y*cosAlpha;
 
     resPoint.x += center.x;    resPoint.y += center.y;
     return resPoint;
+
+    // point.x -= center.x;
+    // point.y -= center.y;
+
+    // p = point.x * Math.cos(1 * Math.PI / 180) - point.y * Math.sin(1 * Math.PI / 180);
+    // point.y = point.x * Math.sin(1 * Math.PI / 180) + point.y * Math.cos(1 * Math.PI / 180);
+    // point.x = p;
+
+    // point.x += center.x;
+    // point.y += center.y;
 }
 function RotatePolygon(/**/)
 {
@@ -123,53 +134,32 @@ function ToRadians(angleInDegrees)
     return 2*Math.PI/360 * angleInDegrees;
 }
 function StartAnimation(ctx, polygon, route) {
-    /*
-        * setTimeout, setInterval;
-        * requestAnimationFrame;
-        * Рекурсия;
-    */
     var canvasWidth = ctx.canvas.width, canvasHeight = ctx.canvas.height;
     var polygonCopy = new Polygon();
     polygonCopy.borderColor = polygon.borderColor;
     polygonCopy.fillColor = polygon.fillColor
 
     var startPointId = 0, endPointId = 1;
-    var t = 0; deltaT = 1/100, alpha = 0, deltaAlpha = 1;
+    var t = 0; deltaT = 1/100, deltaAlpha = 5, deltaAlphaInRad = ToRadians(deltaAlpha);
+    var center = polygon.barycenter();
     function AnimationStep() {
-        /* На каждом шаге: 
-            - вращение на 1 градус polygon;
-            - копирование его координат в polygonCopy;
-            - смещение polygonCopy;
-        */
-        polygonCopy.points = [].concat(polygon.points);
-        var c = polygonCopy.barycenter();
-
-        var alphaCopy = alpha, stageAngle = 15, stageAngleInRad = ToRadians(stageAngle);
-        while (true) {
-            if (alphaCopy >= stageAngle) {
-                for (var i = 0; i < polygonCopy.points.length; ++i) {
-                    var resPoint = Rotate(polygonCopy.points[i], c, stageAngleInRad);
-                    polygonCopy.points[i] = resPoint;
-                }
-                alphaCopy -= stageAngle;
-            } else {
-                var alphaCopyInRad = ToRadians(alphaCopy);
-                for (var i = 0; i < polygonCopy.points.length; ++i) {
-                    var resPoint = Rotate(polygonCopy.points[i], c, alphaCopyInRad);
-                    polygonCopy.points[i] = resPoint;
-                }
-                break;
-            }
+        for (var i = 0; i < polygon.points.length; ++i) {
+            var resPoint = Rotate(polygon.points[i], center, deltaAlphaInRad);
+            polygon.points[i] = resPoint;
+            //Rotate(polygon.points[i], c, deltaAlphaInRad);
         }
-        alpha = (alpha + deltaAlpha) % 360;
-       
+        // ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        // DrawPolygon(ctx, route);
+        // DrawPolygon(ctx, polygon);
+        
         //Движение
         var nextPoint = Object.create(null);
         nextPoint.x = (1 - t)*route.points[startPointId].x + t*route.points[endPointId].x;
         nextPoint.y = (1 - t)*route.points[startPointId].y + t*route.points[endPointId].y;
         
-        c = polygonCopy.barycenter(); //учет предыдущего поворота
-        var xDist = nextPoint.x - c.x, yDist = nextPoint.y - c.y;
+        polygonCopy.points = [].concat(polygon.points);
+        //var c = polygonCopy.barycenter(); //учет предыдущего поворота
+        var xDist = nextPoint.x - center.x, yDist = nextPoint.y - center.y;
         for (var i = 0; i < polygonCopy.points.length; ++i) {
             var resPoint = Translate(polygonCopy.points[i], xDist, yDist);
             polygonCopy.points[i] = resPoint;

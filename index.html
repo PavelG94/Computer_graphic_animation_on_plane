@@ -32,6 +32,7 @@
         </ul>
         <button id='draw_polygon'>Нарисовать полигон</button>
         <button id="draw_route">Нарисовать маршрут</button>
+        <button id="change_route">Править маршрут</button>
         <button id="movement">Анимация движения</button>
         <canvas id="canvas" width="600px" height="400px" style="border: 1px solid black;">Обновите браузер</canvas>
         <script>
@@ -48,7 +49,7 @@
             }
             redElem.onchange = greenElem.onchange = blueElem.onchange = ChangeColorSample;
             
-            function HandleClick(event) {
+            function StoreAndMarkClick(event) {
                 var coords = getCoords(this); //relative to the document
                 var xVal = event.pageX - coords.left,
                     yVal = event.pageY - coords.top;
@@ -57,11 +58,41 @@
                 var rgba = GetChosenRgba();
                 DrawPoint(ctx, point, rgba);  
             }
+            function ChangeRouteByClicks(event) {
+                var coords = getCoords(this); //relative to the document
+                var xVal = event.pageX - coords.left,
+                    yVal = event.pageY - coords.top;
+                var points = route.points, precision = 3;
+                var pointId = -1;
+                for (var i = 0; i < points.length; ++i) {
+                    var xDiff = Math.abs(xVal - points[i].x),
+                        yDiff = Math.abs(yVal - points[i].y);
+                    if (xDiff <= precision && yDiff <= precision) {
+                        pointId = i;
+                        canvas.onmousemove = function(event) {
+                            var coords = getCoords(this); //relative to the document
+                            var x = event.pageX - coords.left,
+                                y = event.pageY - coords.top;
+                            points[pointId].x = x;
+                            points[pointId].y = y;
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            DrawPolygon(ctx, polygon);
+                            DrawPolygon(ctx, route);
+                        }
+                        canvas.onmouseup = function(event) {
+                            canvas.onmousemove = null;
+                        }
+                        break;
+                    }
+                }
+            }
             var ctx = canvas.getContext("2d");
             var polygon = new Polygon(), route = new Polygon();
             var points = [];
-            var isPolygonDrawn = false, isRouteDrawn = false;
-            canvas.onclick = HandleClick;
+            var isPolygonDrawn = false, isRouteDrawn = false, isRouteUnderChange = false;
+            var prevOnclick = StoreAndMarkClick;
+            canvas.onclick = StoreAndMarkClick;
+
             draw_polygon.addEventListener("click", function(event) {
                 if (isPolygonDrawn) return;
                 if (points.length < 2) return;
@@ -72,7 +103,8 @@
                 DrawPolygon(ctx, polygon);
                 isPolygonDrawn = true;
                 if (isRouteDrawn) {
-                    canvas.onclick = false;
+                    prevOnclick = canvas.onclick;
+                    canvas.onclick = null;
                 }
             });
             draw_route.addEventListener("click", function(event) {
@@ -84,7 +116,26 @@
                 DrawPolygon(ctx, route);
                 isRouteDrawn = true;
                 if (isPolygonDrawn) {
-                    canvas.onclick = false;
+                    prevOnclick = canvas.onclick;
+                    canvas.onclick = null;
+                }
+            });
+            change_route.addEventListener("click", function(event) {
+                if (isRouteDrawn == false) return;
+                if (isRouteUnderChange) {
+                    //сохранить изменения
+                    change_route.innerHTML = "Править маршрут";
+                    change_route.style.backgroundColor = "";
+                    canvas.onclick = prevOnclick;
+                    isRouteUnderChange = false;
+                } else {
+                    //активировать действия по изменению
+                    change_route.innerHTML = "Сохранить изменения";
+                    change_route.style.backgroundColor = "green";
+                    prevOnclick = canvas.onclick;
+                    //!: вместо click исп. mousedown, mousemove, mouseup;
+                    canvas.onclick = ChangeRouteByClicks;
+                    isRouteUnderChange = true;
                 }
             });
             movement.addEventListener("click", function() {
