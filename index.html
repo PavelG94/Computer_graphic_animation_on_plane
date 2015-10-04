@@ -62,22 +62,26 @@
                 var coords = getCoords(this); //relative to the document
                 var xVal = event.pageX - coords.left,
                     yVal = event.pageY - coords.top;
-                var points = route.points, precision = 3;
+                var routeData = route.points;
                 var pointId = -1;
-                for (var i = 0; i < points.length; ++i) {
-                    var xDiff = Math.abs(xVal - points[i].x),
-                        yDiff = Math.abs(yVal - points[i].y);
+                for (var i = 0; i < routeData.length; ++i) {
+                    var xDiff = Math.abs(xVal - routeData[i].x),
+                        yDiff = Math.abs(yVal - routeData[i].y);
                     if (xDiff <= precision && yDiff <= precision) {
                         pointId = i;
                         canvas.onmousemove = function(event) {
                             var coords = getCoords(this); //relative to the document
                             var x = event.pageX - coords.left,
                                 y = event.pageY - coords.top;
-                            points[pointId].x = x;
-                            points[pointId].y = y;
+                            routeData[pointId].x = x;
+                            routeData[pointId].y = y;
+                            //перерисовка
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
                             DrawPolygon(ctx, polygon);
                             DrawPolygon(ctx, route);
+                            for (var i = 0; i < routeData.length; ++i) {
+                                DrawPoint(ctx, routeData[i], route.borderColor, precision);
+                            }
                         }
                         canvas.onmouseup = function(event) {
                             canvas.onmousemove = null;
@@ -89,8 +93,9 @@
             var ctx = canvas.getContext("2d");
             var polygon = new Polygon(), route = new Polygon();
             var points = [];
-            var isPolygonDrawn = false, isRouteDrawn = false, isRouteUnderChange = false;
-            var prevOnclick = StoreAndMarkClick;
+            var isPolygonDrawn = false, isRouteDrawn = false, isRouteUnderChange = false,
+                isMovementStarted = false;
+            var prevOnclick = StoreAndMarkClick, precision = 3;
             canvas.onclick = StoreAndMarkClick;
 
             draw_polygon.addEventListener("click", function(event) {
@@ -126,6 +131,7 @@
                     //сохранить изменения
                     change_route.innerHTML = "Править маршрут";
                     change_route.style.backgroundColor = "";
+                    canvas.onmousedown = null;
                     canvas.onclick = prevOnclick;
                     isRouteUnderChange = false;
                 } else {
@@ -133,14 +139,27 @@
                     change_route.innerHTML = "Сохранить изменения";
                     change_route.style.backgroundColor = "green";
                     prevOnclick = canvas.onclick;
-                    //!: вместо click исп. mousedown, mousemove, mouseup;
-                    canvas.onclick = ChangeRouteByClicks;
+                    //увеличить точки - концы отрезков
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    var routeData = route.points;
+                    DrawPolygon(ctx, polygon);
+                    DrawPolygon(ctx, route);
+                    for (var i = 0; i < routeData.length; ++i) {
+                        DrawPoint(ctx, routeData[i], route.borderColor, precision);
+                    }
+                    //Очистка массива с набросанными на канвас точками
+                    points = [];
+
+                    canvas.onclick = null;
+                    canvas.onmousedown = ChangeRouteByClicks;
                     isRouteUnderChange = true;
                 }
             });
             movement.addEventListener("click", function() {
-                if (isPolygonDrawn && isRouteDrawn) {
+                if (isPolygonDrawn && isRouteDrawn && isRouteUnderChange == false 
+                    && isMovementStarted == false) {
                     StartAnimation(ctx, polygon, route);
+                    isMovementStarted = true;
                 }
             });
         </script>

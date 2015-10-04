@@ -38,12 +38,12 @@ function getCoords(elem) {
     left: box.left + pageXOffset
   };
 }
-function DrawPoint(ctx, point, color) {
+function DrawPoint(ctx, point, color, radius) {
     ctx.save();
     
     ctx.beginPath();
     ctx.fillStyle = color.toString();
-    var radius = 1;
+    radius = radius || 1;
     ctx.arc(point.x, point.y, radius, 0, 2*Math.PI);
     ctx.fill();
     
