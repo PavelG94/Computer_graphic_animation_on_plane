@@ -1,0 +1,26 @@
+#color_panel {
+    padding-left: 5px;
+    margin-bottom: 5px;
+    background-color: #8A8585;
+}
+#color_panel > li {
+    display: inline;
+}
+#buttons_panel {
+    background-color: rgba(0, 0, 255, 0.5);   
+}
+.color_chanel, .color_sample {
+    width: 50px;
+    height: 20px;
+}
+.color_sample {
+    vertical-align: middle;
+    background-color: black;
+    display: inline-block;
+}
+#canvas {
+    position: absolute;
+    left: 230px;
+    top: 100px;
+    border: 2px solid black;
+}

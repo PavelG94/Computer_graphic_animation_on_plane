@@ -25,7 +25,7 @@ function Polygon(points, borderRgbaColor, fillRgbaColor) {
             xSum += points[i].x;
             ySum += points[i].y;
         }    
-        var c = Object.create(null); 
+        var c = {}; 
         c.x = Math.round(1/points.length * xSum);
         c.y = Math.round(1/points.length * ySum);
         return c;
@@ -94,9 +94,12 @@ function Translate(point, dx, dy)
 {
     return {x: point.x+dx, y: point.y+dy};
 }
-function TranslatePolygon(/**/)
+function TranslatePolygon(polygon, dx, dy)
 {
-
+    for (var i = 0; i < polygon.points.length; ++i) {
+        var resPoint = Translate(polygon.points[i], dx, dy);
+        polygon.points[i] = resPoint;
+    }
 }
 function Rotate(point, center, alphaInRad)
 {
@@ -113,21 +116,13 @@ function Rotate(point, center, alphaInRad)
 
     resPoint.x += center.x;    resPoint.y += center.y;
     return resPoint;
-
-    // point.x -= center.x;
-    // point.y -= center.y;
-
-    // p = point.x * Math.cos(1 * Math.PI / 180) - point.y * Math.sin(1 * Math.PI / 180);
-    // point.y = point.x * Math.sin(1 * Math.PI / 180) + point.y * Math.cos(1 * Math.PI / 180);
-    // point.x = p;
-
-    // point.x += center.x;
-    // point.y += center.y;
 }
-function RotatePolygon(/**/)
+function RotatePolygon(polygon, center, angleInRad)
 {
-
-
+    for (var i = 0; i < polygon.points.length; ++i) {
+        var resPoint = Rotate(polygon.points[i], center, angleInRad);
+        polygon.points[i] = resPoint;
+    }
 }
 function ToRadians(angleInDegrees)
 {
@@ -143,14 +138,7 @@ function StartAnimation(ctx, polygon, route) {
     var t = 0; deltaT = 1/100, deltaAlpha = 5, deltaAlphaInRad = ToRadians(deltaAlpha);
     var center = polygon.barycenter();
     function AnimationStep() {
-        for (var i = 0; i < polygon.points.length; ++i) {
-            var resPoint = Rotate(polygon.points[i], center, deltaAlphaInRad);
-            polygon.points[i] = resPoint;
-            //Rotate(polygon.points[i], c, deltaAlphaInRad);
-        }
-        // ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        // DrawPolygon(ctx, route);
-        // DrawPolygon(ctx, polygon);
+        RotatePolygon(polygon, center, deltaAlphaInRad);
         
         //Движение
         var nextPoint = Object.create(null);
@@ -158,12 +146,9 @@ function StartAnimation(ctx, polygon, route) {
         nextPoint.y = (1 - t)*route.points[startPointId].y + t*route.points[endPointId].y;
         
         polygonCopy.points = [].concat(polygon.points);
-        //var c = polygonCopy.barycenter(); //учет предыдущего поворота
         var xDist = nextPoint.x - center.x, yDist = nextPoint.y - center.y;
-        for (var i = 0; i < polygonCopy.points.length; ++i) {
-            var resPoint = Translate(polygonCopy.points[i], xDist, yDist);
-            polygonCopy.points[i] = resPoint;
-        }
+        TranslatePolygon(polygonCopy, xDist, yDist);
+        
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         DrawPolygon(ctx, route);
         DrawPolygon(ctx, polygonCopy);
