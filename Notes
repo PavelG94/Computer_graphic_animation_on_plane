@@ -1,0 +1,25 @@
+
+* Подгружать новую версию проекта сразу после внесенных в код изменений:
+http://habrahabr.ru/post/62844/
+* Создание объекта:
+    - var obj = {}; obj.x = x; obj.y = y;
+    - var obj = {x,y};
+    - var obj = Object.create(null);
+* Копирование одномерного массива (2 экв-ых способа):
+    - arr2 = [].concat(arr1);
+    - arr2 = arr1.slice(0);     
+    Мышь:
+* clientX/Y, pageX/Y;
+    Элементы DOM:
+* HTMLElement.offsetTop/offsetLeft;
+* elem.getBoundingClientRect();
+* window.pageXOffset/pageYOffset;
+    Canvas:
+* Canvas FAQ:  http://habrahabr.ru/post/119772/;
+* Правильная настройка внешнего вида:
+    - В первую очередь через атрибуты (width, height, ...);
+    - Что нельзя настроить через атрибуты
+    настроить через css;
+* ctx.globalCompositeOperation: режимы наложения;
+* lineTo(x,y): соединяет последнюю точку пути с (x,y) (moveTo() не нужен!);
+    
